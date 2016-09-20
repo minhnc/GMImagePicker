@@ -98,17 +98,21 @@ static NSString * const CollectionCellReuseIdentifier = @"CollectionCell";
     PHFetchResult *topLevelUserCollections = [PHCollectionList fetchTopLevelUserCollectionsWithOptions:nil];
     PHFetchResult *smartAlbums = [PHAssetCollection fetchAssetCollectionsWithType:PHAssetCollectionTypeSmartAlbum subtype:PHAssetCollectionSubtypeAlbumRegular options:nil];
     self.collectionsFetchResults = @[topLevelUserCollections, smartAlbums];
-    self.collectionsLocalizedTitles = @[NSLocalizedStringFromTableInBundle(@"picker.table.user-albums-header",  @"GMImagePicker", [NSBundle bundleForClass:GMImagePickerController.class], @"Albums"), NSLocalizedStringFromTableInBundle(@"picker.table.smart-albums-header",  @"GMImagePicker", [NSBundle bundleForClass:GMImagePickerController.class], @"Smart Albums")];
-    
+   
+    if(self.picker.arrangeSmartCollectionsFirst == YES)
+    {
+        self.collectionsLocalizedTitles = @[NSLocalizedStringFromTableInBundle(@"picker.table.smart-albums-header",  @"GMImagePicker", [NSBundle bundleForClass:GMImagePickerController.class], @"Smart Albums"),
+           NSLocalizedStringFromTableInBundle(@"picker.table.user-albums-header",  @"GMImagePicker", [NSBundle bundleForClass:GMImagePickerController.class], @"Albums")];
+    }
+    else
+    {
+        self.collectionsLocalizedTitles = @[NSLocalizedStringFromTableInBundle(@"picker.table.user-albums-header",  @"GMImagePicker", [NSBundle bundleForClass:GMImagePickerController.class], @"Albums"), NSLocalizedStringFromTableInBundle(@"picker.table.smart-albums-header",  @"GMImagePicker", [NSBundle bundleForClass:GMImagePickerController.class], @"Smart Albums")];
+    }
+   
     [self updateFetchResults];
     
     // Register for changes
     [[PHPhotoLibrary sharedPhotoLibrary] registerChangeObserver:self];
-    
-    if ([self respondsToSelector:@selector(setEdgesForExtendedLayout:)])
-    {
-        self.edgesForExtendedLayout = UIRectEdgeNone;
-    }
 }
 
 - (void)dealloc
@@ -195,9 +199,17 @@ static NSString * const CollectionCellReuseIdentifier = @"CollectionCell";
             }
         }
     }
-    
-    self.collectionsFetchResultsAssets= @[allFetchResultArray,userFetchResultArray,smartFetchResultArray];
-    self.collectionsFetchResultsTitles= @[allFetchResultLabel,userFetchResultLabel,smartFetchResultLabel];
+   
+    if(self.picker.arrangeSmartCollectionsFirst == YES)
+    {       
+        self.collectionsFetchResultsAssets = @[allFetchResultArray,smartFetchResultArray, userFetchResultArray];
+        self.collectionsFetchResultsTitles = @[allFetchResultLabel, smartFetchResultLabel, userFetchResultLabel];
+    }
+    else
+    {
+        self.collectionsFetchResultsAssets = @[allFetchResultArray, userFetchResultArray,smartFetchResultArray];
+        self.collectionsFetchResultsTitles = @[allFetchResultLabel, userFetchResultLabel,smartFetchResultLabel];
+    }
 }
 
 
@@ -350,7 +362,7 @@ static NSString * const CollectionCellReuseIdentifier = @"CollectionCell";
 {
     UITableViewHeaderFooterView *header = (UITableViewHeaderFooterView *)view;
     header.contentView.backgroundColor = [UIColor clearColor];
-    header.backgroundView.backgroundColor = [UIColor clearColor];
+    header.backgroundView.backgroundColor = self.picker.pickerBackgroundColor;
 
     // Default is a bold font, but keep this styled as a normal font
     header.textLabel.font = [UIFont fontWithName:self.picker.pickerFontName size:self.picker.pickerFontNormalSize];
