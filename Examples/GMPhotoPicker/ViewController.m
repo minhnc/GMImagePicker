@@ -73,7 +73,7 @@
 //    picker.pickerFontHeaderSize = 17.0f;
 //    picker.pickerStatusBarStyle = UIStatusBarStyleLightContent;
 //    picker.useCustomFontForNavigationBar = YES;
- 
+    
 //    picker.arrangeSmartCollectionsFirst = YES;
    
     UIPopoverPresentationController *popPC = picker.popoverPresentationController;
@@ -119,11 +119,82 @@
 
 #pragma mark - GMImagePickerControllerDelegate
 
+- (BOOL)assetsPickerController:(GMImagePickerController *)picker shouldSelectAsset:(PHAsset *)asset
+{
+    NSUInteger maxSelectableMedia = 10; // TODO
+    
+    if (maxSelectableMedia == -1) return true;
+    
+    // show alert gracefully
+    if (picker.selectedAssets.count >= maxSelectableMedia)
+    {
+        UIAlertController *alert =
+        [UIAlertController alertControllerWithTitle:@"Sorry"
+                                            message:[NSString stringWithFormat:@"You can select maximum %ld photos.", (long)maxSelectableMedia]
+                                     preferredStyle:UIAlertControllerStyleAlert];
+        
+        UIAlertAction *action =
+        [UIAlertAction actionWithTitle:@"OK"
+                                 style:UIAlertActionStyleDefault
+                               handler:nil];
+        
+        [alert addAction:action];
+        
+        [picker presentViewController:alert animated:YES completion:nil];
+    }
+    
+    // limit selection to max
+    return (picker.selectedAssets.count < maxSelectableMedia);
+}
+
 - (void)assetsPickerController:(GMImagePickerController *)picker didFinishPickingAssets:(NSArray *)assetArray
 {
     [picker.presentingViewController dismissViewControllerAnimated:YES completion:nil];
     
     NSLog(@"GMImagePicker: User ended picking assets. Number of selected items is: %lu", (unsigned long)assetArray.count);
+    
+    PHImageManager *manager = [PHImageManager defaultManager];
+    
+    PHImageRequestOptions *requestOptions = [[PHImageRequestOptions alloc] init];
+    requestOptions.deliveryMode = PHImageRequestOptionsDeliveryModeHighQualityFormat;
+    requestOptions.resizeMode   = PHImageRequestOptionsResizeModeNone;
+    requestOptions.networkAccessAllowed = YES; // Will download the image from iCloud, if necessary
+    requestOptions.synchronous = NO;
+
+    __block NSUInteger imagesCount = 0;
+    NSUInteger assetsCount = assetArray.count;
+    NSString *tmpDir = NSTemporaryDirectory();
+    NSMutableArray *files = [NSMutableArray arrayWithCapacity:assetsCount];
+    
+    for (PHAsset *asset in assetArray) {
+        
+        [manager requestImageForAsset:asset
+                           targetSize:PHImageManagerMaximumSize
+                          contentMode:PHImageContentModeDefault
+                              options:requestOptions
+                        resultHandler:^void(UIImage *image, NSDictionary *info) {
+                            
+                            imagesCount++;
+                            
+                            NSURL *url = [info objectForKey:@"PHImageFileURLKey"];
+                            NSString *ext = [url pathExtension];
+                            NSString *tmpFile = [tmpDir stringByAppendingPathComponent: [url lastPathComponent]];
+
+                            [files addObject:tmpFile];
+                            
+                            dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_BACKGROUND, 0), ^{
+                                if ([ext isEqualToString:@"JPG"]) {
+                                    [UIImageJPEGRepresentation(image, 1) writeToFile:tmpFile atomically:YES];
+                                } else {
+                                    [UIImagePNGRepresentation(image) writeToFile:tmpFile atomically:YES];
+                                }
+                            });
+                            
+                            if (imagesCount == assetsCount) {
+                                NSLog(@"DONE: %@", files);
+                            }
+                        }];
+    }
 }
 
 //Optional implementation:
