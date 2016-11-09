@@ -45,6 +45,7 @@
     picker.colsInPortrait = 3;
     picker.colsInLandscape = 5;
     picker.minimumInteritemSpacing = 2.0;
+//    picker.maxSelectableAssets = 1;
     
 //    picker.allowsMultipleSelection = NO;
 //    picker.confirmSingleSelection = YES;
@@ -121,6 +122,7 @@
 
 - (BOOL)assetsPickerController:(GMImagePickerController *)picker shouldSelectAsset:(PHAsset *)asset
 {
+    /*
     NSUInteger maxSelectableMedia = 10; // TODO
     
     if (maxSelectableMedia == -1) return true;
@@ -142,9 +144,10 @@
         
         [picker presentViewController:alert animated:YES completion:nil];
     }
+     */
     
     // limit selection to max
-    return (picker.selectedAssets.count < maxSelectableMedia);
+    return (picker.selectedAssets.count < picker.maxSelectableAssets);
 }
 
 - (void)assetsPickerController:(GMImagePickerController *)picker didFinishPickingAssets:(NSArray *)assetArray
