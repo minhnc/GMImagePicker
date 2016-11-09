@@ -140,7 +140,7 @@
         
         [alert addAction:action];
         
-        [picker presentViewController:alert animated:NO completion:nil];
+        [picker presentViewController:alert animated:YES completion:nil];
     }
     
     // limit selection to max
