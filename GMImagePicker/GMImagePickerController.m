@@ -254,11 +254,8 @@
     
     } else if ( _maxSelectableAssets > -1 && nImages >= _maxSelectableAssets) {
         
-        if (_maxSelectableAssets > 1) {
-            return [NSString stringWithFormat:@"You can select maximum %d photos.", _maxSelectableAssets];
-        } else {
-            return [NSString stringWithFormat:@"You can select maximum %d photo.", _maxSelectableAssets];
-        }        
+        return [NSString stringWithFormat:@"You can select maximum %d %@", _maxSelectableAssets,
+                                                    _maxSelectableAssets > 1 ? @"photos": @"photo"];
         
     } else if (nImages > 1) {
         return [NSString stringWithFormat:NSLocalizedStringFromTableInBundle(@"picker.selection.multiple-photos",  @"GMImagePicker", [NSBundle bundleForClass:GMImagePickerController.class],  @"%@ Photos Selected"), @(nImages)];
