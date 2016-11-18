@@ -34,6 +34,13 @@
 
 - (IBAction)launchGMImagePicker:(id)sender
 {
+    NSInteger status = [PHPhotoLibrary authorizationStatus];
+    
+    if ( status == PHAuthorizationStatusDenied || status == PHAuthorizationStatusRestricted ) {
+        [self launchUIImagePicker:sender];
+        return;
+    }
+    
     GMImagePickerController *picker = [[GMImagePickerController alloc] init];
     picker.delegate = self;
     picker.title = @"Custom title";
